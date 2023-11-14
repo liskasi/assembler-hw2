@@ -1,66 +1,57 @@
-.text
-.align 2
 .global matmul
-.type matmul, %function
 
 matmul:
-    stmfd sp!, {r0-r12, lr}
-    mov r8, #0
-
-while_i:
-    ldr r4, [sp, #0]
+  ldr r1, [sp, #52]  // Load mat2
+  ldr r2, [sp, #56]  // Load mat2 (address of the second matrix)
+  ldr r3, [sp, #12] // Load rslt (address of the result matrix)
+  ldr r4, [sp, #16] // Load R1 (number of rows for the first matrix)
+  ldr r5, [sp, #20] // Load C1 (number of columns for the first matrix)
+  ldr r6, [sp, #24] // Load R2 (number of rows for the second matrix)
+  ldr r7, [sp, #28] // Load C2 (number of columns for the second matrix)
+  mov r8, #0
+  outer_loop:
     cmp r8, r4
-    bge end_while_i
+    bge outer_loop_end
+
     mov r9, #0
 
-while_j:
-    ldr r5, [sp, #56]
-    cmp r9, r5
-    bge end_while_j
-    mov r10, #0
+    middle_loop:
+      cmp r9, r7
+      bge middle_loop_end
 
-while_k:
-    ldr r3, [sp, #12]
-    cmp r10, r3
-    bge end_while_k
+      mov r10, #0
+      mov r11, #0
 
-    mov r11, r8, LSL #2
-    mul r6, r11, r3
-    mov r12, r10, LSL #2
-    add r6, r6, r12
+      inner_loop:
+        cmp r10, r6
+        bge inner_loop_end
 
-    ldr r1, [sp, #8]
-    ldr r3, [r1, r6]
+        mov r0, r1
+        add r12, r0, r10, LSL #2
+        mov r0, r1
+        add r13, r0, r8, LSL #2
 
-    mul r6, r12, r5
-    mov r11, r9, LSL #2
-    add r6, r6, r11
-    ldr r2, [sp, #60]
-    ldr r4, [r2, r6]
+        // mov r12, #0
 
-    mul r7, r3, r4
+        //mov r0, r2
+        //add r13, r0, r10, LSL #2
+        //add r14, r2, r10, LSL #2
 
-    ldr r1, [sp, #64]
-    mov r11, r8, LSL #2
-    mul r6, r11, r5
-    mov r0, r9, LSL #2
-    add r6, r6, r0
+        //mul r12, r13, r14
+        //add r10, r10, r12
+        ldr r3, [r13]
 
-    ldr r2, [r1, r6]
-    add r3, r7, r2
-    str r3, [r1, r6]
+        add r10, r10, #1
+        b inner_loop
 
-    add r10, r10, #1
-    b while_k
-
-end_while_k:
-    add r9, r9, #1
-    b while_j
-
-end_while_j:
+      inner_loop_end:
+      add r9, r9, #1
+      b middle_loop
+    middle_loop_end:
     add r8, r8, #1
-    b while_i
+    b outer_loop
 
-end_while_i:
-    ldmfd sp!, {r0-r12, lr}
-    bx lr
+  outer_loop_end:
+  mov r0, r3
+  bx lr
+  .end
